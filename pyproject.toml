@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "speech-to-text-pipeline"
+version = "0.1.0"
+description = "Resample any audio to 16 kHz mono, cut silence with Silero VAD, then transcribe with faster-whisper: language detection and word timestamps mapped back to the original recording."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = ["faster-whisper>=1.2.1", "numpy>=2.3", "av>=15"]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=9.2",
+  "pytest-timeout>=2.4",
+  "ruff>=0.17",
+  "mypy>=2.4",
+  "pip-audit>=2.10",
+]
+
+[project.scripts]
+stt = "speech_to_text_pipeline.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+speech_to_text_pipeline = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+timeout = 600
+markers = ["model: needs the downloaded sample clips and the Whisper tiny model (see tests/conftest.py)"]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = [".tmp", ".venv", "data"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "S", "SIM", "RUF", "N", "C4", "PT", "RET", "PIE", "PERF", "BLE"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S311"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+
+# faster-whisper, PyAV's resampler path and onnxruntime ship no complete type information;
+# their objects are typed as Any at the boundary.
+[[tool.mypy.overrides]]
+module = ["faster_whisper", "faster_whisper.*", "av", "av.*"]
+ignore_missing_imports = true
+follow_untyped_imports = false
